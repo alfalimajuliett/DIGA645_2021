@@ -1,6 +1,6 @@
 library(dplyr)
 library(babynames)
-#Class 2 examples
+#Class 3 examples
 
 #the dataframe we created from the first class
 city <- c("Chicago", "Des Moines", "Duluth", "Fargo")
