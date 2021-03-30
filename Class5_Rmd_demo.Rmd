@@ -1,0 +1,69 @@
+---
+title: "Class 5 example Rmd"
+author: "Mary Marek-Spartz"
+date: "3/30/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown example with Palmer Penguins
+
+These are the packages I'm using
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(palmerpenguins)
+library(dplyr)
+library(maps)
+library(mapdata)
+library(rgdal)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+p_vis <- ggplot(data=penguins,aes(x=bill_length_mm, y=flipper_length_mm, color = species)) + 
+  geom_point() + 
+  theme_minimal() + 
+  labs(title = "length of bills and flippers", subtitle = "Palmer Penguins!", x="bill", y="flipper")  
+p_vis
+```
+
+####Penguins dataset table
+
+```{r, echo=FALSE}
+penguinsh <- head(penguins)
+p_table <- knitr::kable(penguinsh, caption = "example of penguin data")
+p_table
+
+```
+
+```{r}
+m_pen <- penguins %>% filter(sex=='male')
+f_pen <- penguins %>% filter(sex == 'female')
+
+ggplot()+ #you can leave the arguments to the ggplot function blank if you plan to add geoms that refer to different data sources
+  geom_point(data = m_pen, aes(x=bill_length_mm, y = bill_depth_mm, shape = species), color="yellow")+
+  geom_point(data = f_pen, aes(x=bill_length_mm, y = bill_depth_mm, shape = species), color="purple")
+
+```
+
+```{r}
+usa <- map_data("usa") # bringing in US spatial data from map_data package
+usa
+
+ggplot() + geom_polygon(data = usa, aes(x=long, y = lat, group = group)) + #group = group is important to get the geometries of the objects in usa to know where they are relative to each other
+  coord_fixed(1.3) #this makes the plot less stretched out 
+
+us_fill <- ggplot() + 
+  geom_polygon(data = usa, aes(x=long, y = lat, group = group), fill = "green", color = "blue") + #fill for inside the polygon, color for outline
+  coord_fixed(1.3)
+us_fill
+```
+
+<img src = "https://education.rstudio.com/blog/2020/07/palmerpenguins-cran/penguins_cran.png" img width = 40%>
