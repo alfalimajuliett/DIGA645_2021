@@ -1,0 +1,75 @@
+---
+title: "Shiny App Proposal"
+author: "Mary Marek-Spartz"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    toc: true
+    number_sections: false
+    theme: lumen
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# SCISM (Supervised Climate Index of Similarity Model)
+####*An open-source climate matching web application for biological control practitioners*
+
+##Statement of Purpose
+This shiny application will provide a web interface to one or more climate matching alorithms through the `raster` R package. Climate matching is a common practice in ecology for modelling the potential distribution of a non-native species in a novel area based on the climate in its home region. Generally, climate matching algorithms, or climate-envelope models, take a set of location points and intersect them with a raster layers of climatic data. The climate variables are used to interpolate one raster surface with an index of similarity to the climate variables specified for the set of points. This app will allow the user to upload their location points for a species as a .csv file, choose the climate variables they want to include in the match, and then run the algorithm (BIOCLIM), and visualize the output raster. 
+
+packages required:
+
+```{r, message=FALSE, warning=FALSE}
+library(rgdal)
+library(raster) #contains API for extracting bioclimatic variables
+library(dismo) #contains climate envelope algorithm
+```
+
+## Data Sources
+
+This app will run on 19 bioclimatic surfaces provided to R through the `raster` package. The raster package contains an API to the [Worldclim](http://www.worldclim.org) data set, that will extract raster tiles from the web for selected variables. These variables can be extracted for point locations with latitude/longitude data.
+
+```
+#example code on the back end
+climate_match <- getData("worldclim", var = 'bio', res = 10, 
+                 lon = (data$Longitude), lat = (data$Latitude))
+selected_variables <- climate_match[[c(6,15,3)]] #geting variables 6, 15, 3 from Worldclim dataset
+
+```
+The species location data that I use as an example in this demo was obtained from [gbif](https://www.gbif.org).
+
+## App Functions
+This shiny app will allow the user to upload a .csv file with their lat/long points, select the climate variables that they want to include in the climate match (sending the information to the `raster` Worldclim API on the back end), and then select the climate matching algorithm to map the climate similarity on a world map. I plan on using the R `dismo` package implementation of the [bioclim](https://www.rdocumentation.org/packages/dismo/versions/1.1-4/topics/bioclim) climate envelope model. Below is an output climate similary map for one of my study insects *Cuetorhynchus constrictus* (pictured below). 
+
+<img src="http://s3.amazonaws.com/everystockphoto/fspid/24/86/77/45/weevil-beetle-insects-24867745-o.jpg" width = 30%>
+
+This insect is native to Europe, and a specialist herbivore on an invasive plant in North America, garlic mustard. *C. constrictus* has been prioritized for release as a biological control product for garlic mustard, and assessing where the climate is suitable for it to establish in North America is critical to the risk analysis process. The bioclim algorithm here is fed the *C. constrictus* location points from europ and is predicting on three bioclimatic variables: Temperature isothermality, rainfall seasonality, and minimum temperature in the coldest season:
+
+
+```{r, echo=FALSE, cache=TRUE}
+strictus <- read.csv("cConstrictusLocs.csv")
+biocc <- getData("worldclim", var = 'bio', res = 10, 
+                 lon = (strictus$decimalLongitude), lat = (strictus$decimalLatitude))
+ccVariables <- biocc[[c(6,15,3)]]
+cConstrict <- data.frame(longitude =strictus$decimalLongitude, latitude = strictus$decimalLatitude)
+ccExtract <- extract(biocc, cConstrict)
+ccMatch <- bioclim(ccVariables, cConstrict)
+
+northAmerica <- extent(-178, 40, 10, 80)
+
+ccP<-predict(ccVariables,ccMatch, ext = northAmerica, tails=c('high', 'high', 'both'))
+plot(ccP)
+points(x = strictus$decimalLongitude, y = strictus$decimalLatitude, cex = .1, pch = 16)
+
+```
+
+If time allows, I may include the option for the user to select another climate evelope algorithm provided by `dismo`, DOMAIN. 
+
+## Programming challenges
+The bioclim algorithm can be slow, especially if a lot of climatic variables are used in the prediction. Additionally, it tends to overfit, so if too many variables are selected, it may output a map with little to no surface determined to be similar. I may need to limit the variables that the user can select, or only provide a portion of the 19 variables. 
+
+The output climate match plots are static, so the user will not be able to zoom to a certain extent. One workaround may be to have several selected extents for each continent, and give the user a dropdown menu to select the continent where they want to visualize the climate match map. 
+
