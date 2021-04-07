@@ -91,8 +91,10 @@ ggplot() +
 
 #Getting started on assignment 3
 #the readOGR function is in rgdal. It may take a while to read this in, there are a lot of points and it is a wide dataset
-invasive_ob <- readOGR("~/Desktop/Rclass/invasive_spp/terrestrial_invasive_species_observations_pt.shp", layer = "terrestrial_invasive_species_observations_pt")
+invasive_ob <- readOGR("~/Desktop/Rclass/shp_env_invasive_terrestrial_obs/terrestrial_invasive_species_observations_pt.shp", layer = "terrestrial_invasive_species_observations_pt")
 invasive_df <- as.data.frame(invasive_ob)
+
+
 Ct <- subset(invasive_df, invasive_df$commonname == "Canada thistle")
 Gm <- subset(invasive_df, invasive_df$scientific == "Alliaria petiolata")
 Tv <- subset(invasive_df, invasive_df$scientific == "Tanacetum vulgare")
